@@ -1,5 +1,5 @@
 /* eslint-disable jsx-a11y/accessible-emoji */
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import cn from 'classnames';
 import './App.scss';
 
@@ -26,11 +26,29 @@ const products = productsFromServer.map(product => {
 export const App = () => {
   const [visibleProducts, setVisibleProducts] = useState(products);
   const [selectedUser, setSelectedUser] = useState(0);
+  const [query, setQuery] = useState('');
+
+  useEffect(() => {
+    const formattedQuery = query.trim().toLowerCase();
+
+    const doesProductNameMatchesQuery = product =>
+      product.name.toLowerCase().includes(formattedQuery);
+
+    const filteredProducts = products.filter(product =>
+      doesProductNameMatchesQuery(product),
+    );
+
+    setVisibleProducts(filteredProducts);
+
+    if (!formattedQuery) {
+      setVisibleProducts(products);
+    }
+  }, [query, products]);
 
   const handleUserClick = user => {
     setSelectedUser(user);
 
-    const filteredProducts = products.filter(
+    const filteredProducts = visibleProducts.filter(
       product => product.user.id === user.id,
     );
 
@@ -41,6 +59,18 @@ export const App = () => {
     setSelectedUser(0);
     setVisibleProducts(products);
   };
+
+  const handleQueryChange = event => {
+    setQuery(event.target.value);
+  };
+
+  const formattedQuery = query.trim().toLowerCase();
+
+  const doesProductMatchQuery = product => {
+    product.name.toLowerCase().includes(formattedQuery);
+  };
+
+  visibleProducts.filter(product => doesProductMatchQuery(product));
 
   return (
     <div className="section">
@@ -71,6 +101,7 @@ export const App = () => {
                     'is-active': selectedUser.id === user.id,
                   })}
                   onClick={() => handleUserClick(user)}
+                  key={user.id}
                 >
                   {user.name}
                 </a>
@@ -84,7 +115,8 @@ export const App = () => {
                   type="text"
                   className="input"
                   placeholder="Search"
-                  value="qwe"
+                  value={query}
+                  onChange={handleQueryChange}
                 />
 
                 <span className="icon is-left">
@@ -208,7 +240,11 @@ export const App = () => {
             <tbody>
               {visibleProducts.map(product => (
                 <tr data-cy="Product">
-                  <td className="has-text-weight-bold" data-cy="ProductId">
+                  <td
+                    className="has-text-weight-bold"
+                    data-cy="ProductId"
+                    key={product.id}
+                  >
                     {product.id}
                   </td>
 
